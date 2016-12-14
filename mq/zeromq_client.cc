@@ -9,6 +9,9 @@
 
 #include <pthread.h>
 
+// in order to test via protobuf obj
+#include "datamsg.pb.h"
+
 // defined in another c source file
 extern int random_int(int from, int to);
 
@@ -19,6 +22,94 @@ struct testmqthread{
 
 struct testmqthread thd;
 
+int useless = 100;
+int *p_useless = &useless;
+
+
+int send_mqdata(void *s, void *data, int len)
+{
+    int ret = -1;
+    zmq_msg_t msg;
+
+    zmq_msg_init_size(&msg, len);
+    memcpy(zmq_msg_data(&msg),
+            data,
+            len);
+
+    ret = zmq_msg_send(&msg, s, 0);
+
+    zmq_msg_close(&msg);
+
+    return ret == len ? 0 : -1;
+}
+
+/**
+ * return 0 means req-response are correct.
+ */
+int verify_response(void *s, int match_num)
+{
+    int ret = -1;
+    zmq_msg_t msg;
+    zmq_msg_init(&msg);
+    mqdemo::ReqResult obj;
+
+    int size = zmq_msg_recv(&msg, s, 0);
+    if(size == -1) {
+        printf("the data len is in-valid!");
+        return -1;
+    }
+    char *buf = (char *) malloc(size);
+    memcpy(buf, zmq_msg_data(&msg), size);
+
+    // buf should be the object
+    if(obj.ParseFromArray(buf, size) == true){
+        printf("Good, protobuf obj parsed OK\n");
+        printf("\tThe code:%d, the msg:%s\n", obj.code(), obj.msg().c_str());
+        printf("[%d] <---> [%d]\n", match_num, obj.code());
+        if((2*match_num) == obj.code()) {
+            ret = 0;
+        }
+    } else {
+        printf("**failed parse the protobuf obj\n");
+    }
+
+    zmq_msg_close(&msg);
+    free(buf);
+
+    return ret;
+}
+
+void try_send_req(void *s, int type)
+{
+    char buf[128];
+
+    mqdemo::ReqAction obj;
+    obj.set_type(type);
+    snprintf(buf, sizeof(buf),
+            "the msg for %d type\n", type);
+    obj.set_name(buf);
+
+    // Now try load them...
+    int objlen = obj.ByteSize();
+    char *packet = (char *)malloc(objlen);
+    if(obj.SerializeToArray(packet, objlen) == true){
+        printf("=== Serialize obj [OK] ===\n");
+        if(send_mqdata(s, packet, objlen) != 0){
+            printf("warning, send MQ probably incorrect\n");
+        }
+
+        // next, try keep get response from server....
+        if(verify_response(s, type) != 0){
+            printf("Error**, req-response not match!\n");
+        }
+
+    } else {
+        printf("****Failed serialize the obj\n");
+    }
+
+    free(packet);
+}
+
 void *sending_thread(void *param)
 {
     struct testmqthread *p = (struct testmqthread *)param;
@@ -28,13 +119,11 @@ void *sending_thread(void *param)
 
     for(i = 0; i < num; i++){
         // do a lot of reqs...
-        printf("gen random=%d\n", random_int(1, 12));
+        try_send_req(p->th_zmq, random_int(1, 2000));
     }
 
-    return NULL;
+    return &p_useless;
 }
-
-
 /**
  * Try send totally @reqcount request to server
  *

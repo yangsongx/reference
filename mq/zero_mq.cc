@@ -40,11 +40,11 @@ void try_send_back(void *s, mqdemo::ReqAction *req)
         printf("****Failed serialize the obj\n");
     }
 
-    zmq_send(s, "world", 5, 0);
+//    zmq_send(s, "world", 5, 0);
 
     free(buf);
 }
-// NOTE - DO NOT USE below function
+
 void try_get_reqmsg(void *s, mqdemo::ReqAction *obj)
 {
     zmq_msg_t msg;

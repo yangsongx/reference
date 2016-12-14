@@ -6,7 +6,7 @@ CC = gcc
 CXX = g++
 
 SRC = zero_mq.cc datamsg.pb.cc
-C_SRC = zeromq_client.cc gen_random.cc
+C_SRC = zeromq_client.cc gen_random.cc datamsg.pb.cc
 
 # Release should use -O2
 ifeq ($(DEBUG),false)
@@ -27,7 +27,7 @@ mqs:$(OBJS)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 mqc:$(COBJS)
-	$(CC) -o $@ $^ $(LDFLAGS) -lm -pthread
+	$(CXX) -o $@ $^ $(LDFLAGS) -lm -pthread
 
 .cc.o:
 	$(CXX) $(CFLAGS) -c $< -o $@
