@@ -5,7 +5,7 @@ DEBUG=true
 CC = gcc
 CXX = g++
 
-SRC = zero_mq.cc
+SRC = zero_mq.cc datamsg.pb.cc
 C_SRC = zeromq_client.c
 
 # Release should use -O2
@@ -15,7 +15,7 @@ else
 CFLAGS += -DCHECK_MEM_LEAK -DDEBUG -g -O0
 endif
 
-LDFLAGS = -lzmq
+LDFLAGS = -lzmq -lprotobuf
 
 
 OBJS = $(SRC:.cc=.o)
@@ -32,7 +32,7 @@ mqc:$(COBJS)
 .cc.o:
 	$(CXX) $(CFLAGS) -c $< -o $@
 .c.o:
-	$(CXX) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY:clean
 clean:
