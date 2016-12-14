@@ -17,7 +17,7 @@ extern int random_int(int from, int to);
 
 struct testmqthread{
     int th_count;   // how many reqs in current thread
-    void *th_zmq;   // zmq socket connection
+    void *th_zmq;   // zmq context, not socket
 };
 
 struct testmqthread thd;
@@ -114,13 +114,21 @@ void *sending_thread(void *param)
 {
     struct testmqthread *p = (struct testmqthread *)param;
 
+    void *cs = zmq_socket(p->th_zmq, ZMQ_REQ);
+    if(!cs){
+        printf("**failed create the socket!\n");
+        return &p_useless;
+    }
+
     int num = (p->th_count/2);
     int i;
 
     for(i = 0; i < num; i++){
         // do a lot of reqs...
-        try_send_req(p->th_zmq, random_int(1, 2000));
+        try_send_req(cs, random_int(1, 2000));
     }
+
+    zmq_close(cs);
 
     return &p_useless;
 }
@@ -170,7 +178,7 @@ int main(int argc, char **argv)
         printf("*** failed get the ZMQ resource!\n");
         return -1;
     }
-
+#if 1
     void *mq_c = zmq_socket(ctx, ZMQ_REQ);
     if(!mq_c){
         printf("failed create the client MQ\n");
@@ -184,6 +192,7 @@ int main(int argc, char **argv)
         printf("connect MQ [failed]\n");
         goto quitcode;
     }
+#endif
 
     /* ./a.out 25000 -t  (-t here means sleep for a while before sending req) */
     if(argc > 1) {
@@ -196,7 +205,7 @@ int main(int argc, char **argv)
         }
 
         // drop into a testing world...
-        simulate_many_req(count, mq_c);
+        simulate_many_req(count, ctx);
 
         goto quitcode;
     }
@@ -212,12 +221,14 @@ int main(int argc, char **argv)
     zmq_recv(mq_c, buf, sizeof(buf), 0);
     printf("<---- Server tell me with %s\n", buf);
 
-
+#if 1
 quitcode:
     printf("try clean the code...\n");
 
     if(mq_c != NULL)
         zmq_close(mq_c);
+#endif
+    printf("destroy the zmq context...\n");
     zmq_ctx_destroy(ctx);
 
     return 0;
