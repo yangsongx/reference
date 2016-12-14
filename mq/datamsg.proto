@@ -1,0 +1,14 @@
+// we are using 3.X now
+syntax = "proto3";
+package mqdemo;
+
+
+message ReqAction{
+    int32 type = 1;
+    string name = 2;
+}
+
+message ReqResult{
+    int32 code = 1;
+    string msg = 2;
+}
