@@ -17,7 +17,12 @@ void try_send_back(void *s, mqdemo::ReqAction *req)
     mqdemo::ReqResult robj;
     printf("the req type = %d\n", req->type());
     robj.set_code(2*(req->type()));
-    std::string prepend = "C++" + req->name();
+    std::string prepend;
+    if(req->name().find("python") != std::string::npos){
+        prepend = "I know you are Python! " + req->name();
+    } else {
+        prepend = "C++" + req->name();
+    }
     robj.set_msg(prepend);
     int i = 0;
     int rlen = robj.ByteSize();

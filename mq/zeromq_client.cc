@@ -65,7 +65,7 @@ int verify_response(void *s, int match_num)
     if(obj.ParseFromArray(buf, size) == true){
         printf("Good, protobuf obj parsed OK\n");
         printf("\tThe code:%d, the msg:%s\n", obj.code(), obj.msg().c_str());
-        printf("[%d] <---> [%d]\n", match_num, obj.code());
+        printf("[%d] [2*%d=%d] <---> [%d]\n", match_num, match_num, 2*match_num, obj.code());
         if((2*match_num) == obj.code()) {
             ret = 0;
         }
@@ -100,7 +100,9 @@ void try_send_req(void *s, int type)
 
         // next, try keep get response from server....
         if(verify_response(s, type) != 0){
-            printf("Error**, req-response not match!\n");
+            printf("CASE Error**, req-response not match!\n");
+        } else {
+            printf("CASE Pass== Congratulations!\n");
         }
 
     } else {
@@ -120,12 +122,20 @@ void *sending_thread(void *param)
         return &p_useless;
     }
 
+    if(zmq_connect(cs, "tcp://59.110.8.34:5555") != 0) {
+        printf("*** failed connect to server\n");
+        zmq_close(cs);
+        return &p_useless;
+    }
+
+    printf("connecting to server .... [OK]\n");
+
     int num = (p->th_count/2);
     int i;
 
     for(i = 0; i < num; i++){
         // do a lot of reqs...
-        try_send_req(cs, random_int(1, 2000));
+        try_send_req(cs, random_int(1, 200));
     }
 
     zmq_close(cs);
@@ -178,7 +188,7 @@ int main(int argc, char **argv)
         printf("*** failed get the ZMQ resource!\n");
         return -1;
     }
-#if 1
+
     void *mq_c = zmq_socket(ctx, ZMQ_REQ);
     if(!mq_c){
         printf("failed create the client MQ\n");
@@ -192,9 +202,12 @@ int main(int argc, char **argv)
         printf("connect MQ [failed]\n");
         goto quitcode;
     }
-#endif
 
-    /* ./a.out 25000 -t  (-t here means sleep for a while before sending req) */
+    /* stress test case like this:
+     * ===============================================
+     * ./a.out 25000 -t  (-t here means sleep for a while before sending req)
+     * ===============================================
+     */
     if(argc > 1) {
         int count = atoi(argv[1]);
         printf("We will send totally %d req packages to server...\n", count);
@@ -221,13 +234,13 @@ int main(int argc, char **argv)
     zmq_recv(mq_c, buf, sizeof(buf), 0);
     printf("<---- Server tell me with %s\n", buf);
 
-#if 1
+
 quitcode:
     printf("try clean the code...\n");
 
     if(mq_c != NULL)
         zmq_close(mq_c);
-#endif
+
     printf("destroy the zmq context...\n");
     zmq_ctx_destroy(ctx);
 
