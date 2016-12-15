@@ -5,7 +5,7 @@ DEBUG=true
 CC = gcc
 CXX = g++
 
-SRC = zero_mq.cc datamsg.pb.cc
+SRC = zero_mq.cc datamsg.pb.cc gen_random.cc
 C_SRC = zeromq_client.cc gen_random.cc datamsg.pb.cc
 
 # Release should use -O2

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <getopt.h>
 #include <unistd.h>
 #include <zmq.h>
 
@@ -181,13 +182,38 @@ void simulate_many_req(int reqcount, void *s)
     printf("Thread-2 got %d [OK case]\n", *((int*)thdresult[1]));
 }
 
+void subscriber_mode(void *ctx)
+{
+}
+
 int main(int argc, char **argv)
 {
+    int c;
+    int sub_mode = 0; // subscriber
+
     void *ctx = zmq_ctx_new();
     if(!ctx) {
         printf("*** failed get the ZMQ resource!\n");
         return -1;
     }
+
+    while((c = getopt(argc, argv, "s")) != -1) {
+        switch(c){
+            case 's':
+                sub_mode = 1;
+                break;
+
+            default:
+                break;
+        }
+    }
+
+#if 1
+    if(sub_mode){
+        subscriber_mode(ctx);
+    } else {
+    }
+#else
 
     void *mq_c = zmq_socket(ctx, ZMQ_REQ);
     if(!mq_c){
@@ -240,7 +266,7 @@ quitcode:
 
     if(mq_c != NULL)
         zmq_close(mq_c);
-
+#endif
     printf("destroy the zmq context...\n");
     zmq_ctx_destroy(ctx);
 
