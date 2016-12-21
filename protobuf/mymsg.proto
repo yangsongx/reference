@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package mydemo;
+
+enum NameType {
+    EMAIL = 0;
+    PHONE = 1;
+    USERNAME = 2;
+}
+
+message ReqMsg {
+    int32 code = 1;
+    NameType ntype = 2;
+}

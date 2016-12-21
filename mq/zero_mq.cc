@@ -1,5 +1,8 @@
 /**
  * Show how to use Zero Message Queue (Server Side)
+ *
+ * -p  : demo publisher/subscriber pattern
+ * -i  : demo pipline pattern
  */
 #include <stdio.h>
 #include <getopt.h>
@@ -7,13 +10,17 @@
 #include <unistd.h>
 #include <zmq.h>
 
-//#include <google/protobuf/io/coded_stream.h>
-//#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-
 #include "datamsg.pb.h"
 
 /* defined by gen_random.cc */
 extern int random_int(int from, int to);
+
+extern void *prepare_server(void *ctx);
+extern void *prepare_client(void *ctx);
+
+extern void *prepare_generator(void *ctx);
+extern void *prepare_consumer(void *ctx);
+extern void *prepare_sink(void *ctx);
 
 void *glb_zmq_ctx = NULL;
 void *glb_pub_s = NULL; // publisher socket
@@ -100,6 +107,7 @@ void handle_client_request(void *s)
 void sig_hdl(int signo)
 {
     printf("==SIG HANDLER==(for %d)\n", signo);
+    exit(1); // force quit without free resource...
 
     if(glb_pub_s)
         zmq_close(glb_pub_s);
@@ -108,6 +116,10 @@ void sig_hdl(int signo)
 
     printf("==SIG HANDLER== finished res cleanup\n");
     exit(0);
+}
+
+void pipeline_mode(void *ctx)
+{
 }
 
 void normal_mode(void *ctx)
@@ -200,6 +212,10 @@ int main(int argc, char **argv)
 {
     int c;
     int pub_mode = 0;
+    int pipe_mode = 0; // -i
+    int type_pipe = 0; // 0 - for generator (PUSH)
+                       // 1 - for consumer(PULL)
+                       // 2 - for final result(PULL)
 
     srand(time(NULL));
 
@@ -212,10 +228,15 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    while((c = getopt(argc, argv, "p")) != -1) {
+    while((c = getopt(argc, argv, "pi:")) != -1) {
         switch(c){
             case 'p':
                 pub_mode = 1;
+                break;
+
+            case 'i':
+                pipe_mode = 1;
+                type_pipe = atoi(optarg);
                 break;
 
             default:
@@ -226,6 +247,19 @@ int main(int argc, char **argv)
     if(pub_mode) {
         printf("Server is trying run as Publish-Subscriber mode...\n");
         publish_mode(glb_zmq_ctx);
+    } else if(pipe_mode){
+        printf("show as pipeline mode...\n");
+        if(type_pipe == 0){
+            printf("-->generator demo...\n");
+            prepare_generator(glb_zmq_ctx);
+        } else if(type_pipe == 1) {
+            printf("--->consumer demo...\n");
+            prepare_consumer(glb_zmq_ctx);
+        } else {
+            printf("--->sink demo...\n");
+            prepare_sink(glb_zmq_ctx);
+        }
+        //pipeline_mode(glb_zmq_ctx);
     } else {
         normal_mode(glb_zmq_ctx);
     }
