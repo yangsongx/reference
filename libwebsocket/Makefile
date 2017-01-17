@@ -5,32 +5,35 @@ DEBUG=true
 CC = gcc
 CXX = g++
 
-SRC = server.c
+SRC = server.cc
 
-C_SRC = zeromq_client.cc gen_random.cc datamsg.pb.cc
+C_SRC = client.cc
 
 # Release should use -O2
 ifeq ($(DEBUG),false)
-CFLAGS += -DDEBUG -O2
+CXXFLAGS += -DDEBUG -O2
 else
-CFLAGS += -DCHECK_MEM_LEAK -DDEBUG -g -O0
+CXXFLAGS += -DCHECK_MEM_LEAK -DDEBUG -g -O0
 endif
 
 LDFLAGS = -lwebsockets
 
 
-OBJS = $(SRC:.c=.o)
+OBJS = $(SRC:.cc=.o)
 COBJS = $(C_SRC:.cc=.o)
 
-all:webs
+all:webs webc
 
 webs:$(OBJS)
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
-.c.o:
-	$(CC) $(CFLAGS) -c $< -o $@
+webc:$(COBJS)
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+.cc.o:
+	$(CXX) $(CXXLAGS) -c $< -o $@
 
 .PHONY:clean
 clean:
-	rm -rf *.o webs
+	rm -rf *.o webs webc
 	find . -name '*.o' -exec rm -rf {} ";"
