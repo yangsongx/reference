@@ -31,7 +31,7 @@ webc:$(COBJS)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 .cc.o:
-	$(CXX) $(CXXLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 .PHONY:clean
 clean:

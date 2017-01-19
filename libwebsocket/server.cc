@@ -18,15 +18,28 @@ static int ws_service_callback(struct lws *wsi,
 {
     switch(reason){
         case LWS_CALLBACK_ESTABLISHED:
+            char buf[32];
+            printf("the buf:%s\n", lws_wsi_user(wsi));
+            lws_hdr_copy_fragment(wsi, buf, sizeof(buf), WSI_TOKEN_HTTP_URI_ARGS, 20);
+            printf("the buf:%s\n", lws_wsi_user(wsi));
+
             printf("SERVER CONN ESTABLISHED\n");
+            if (len > 0){
+                printf("coming with in(%s), len=%ld\n",
+                    (char *)in, len);
+            }
             break;
 
         case LWS_CALLBACK_RECEIVE:
             printf("LWS cb recv\n");
+            printf("coming with %s, %s, %ld\n",
+                    user, in, len);
             break;
 
         case LWS_CALLBACK_CLOSED:
             printf("closed\n");
+            printf("coming with (%s) (%s), %ld\n",
+                    user, in, len);
             break;
 
         default:
