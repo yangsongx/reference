@@ -16,7 +16,7 @@ NEWSPIDER_MODULE = 'douban.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'douban (+http://www.yourdomain.com)'
+USER_AGENT = 'Mozilla/4.0 (comptatible; MSIE 6.0; Windows NT 5.1;SV1)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
