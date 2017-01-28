@@ -32,7 +32,8 @@ class BookSpider(scrapy.Spider):
                 title += it.xpath("div[@class='info']/h2/a/span/text()").extract_first()
 
             rating = it.re(r"\<span class=\"rating_nums\"\>?([\s\S]*?)\<\/span\>")[0]
-            print("Title:%s  Rating:%s" %(title, rating))
+            pubinfo = it.re(r"\<div class=\"pub\"\>?([\s\S]*?)\<\/div\>")[0].strip()
+            print("Title:%s  Rating:%s  Pub:%s" %(title, rating, pubinfo))
 
 
         pass
