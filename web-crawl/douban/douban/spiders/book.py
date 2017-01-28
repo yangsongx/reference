@@ -1,12 +1,22 @@
 # -*- coding: utf-8 -*-
 import scrapy
 
+# from local items.py
+from douban.spiders.items import BookItem
 
+###
+# 豆瓣的书籍分类(tag)
+#
+# 0 - 编程
+# 1 - 儿童文学
+#
+#######
 class BookSpider(scrapy.Spider):
     name = "book"
     allowed_domains = ["book.douban.com"]
     start_urls = ['http://book.douban.com/tag/编程']
 
+    # Just a internal util
     def _save_offline(self, fn, data):
         fd = open(fn, "w")
         fd.write(data)
@@ -15,19 +25,14 @@ class BookSpider(scrapy.Spider):
     def parse(self, response):
         bksel = response.xpath("//li[@class='subject-item']")
         print("Totally %d items found" %(len(bksel)))
-        self._save_offline("/tmp/my.html", str(response.body))
 
         for it in bksel:
-            print(type(it.xpath("div/@class")))
-            print(type(it.xpath("div/@class").extract()))
+            title = it.xpath("div[@class='info']/h2/a/text()").extract()[0].strip()
+            if it.xpath("div[@class='info']/h2/a/span/text()").extract_first() != None:
+                title += it.xpath("div[@class='info']/h2/a/span/text()").extract_first()
 
-            print(it.xpath("div/@class").extract())
-            print(it.xpath("div[@class='info']/h2/a/text()").extract()[0].strip())
-            if it.xpath("div[@class='pub']/text()").extract() is None:
-                print("BAD, empty")
-            else:
-                print(it.xpath("div[@class='pub']/text()").extract())
-#print(it.xpath("div[@class='star_clearfix']/span[@class='rating_nums']/text()").extract())
-#print(h2)
+            rating = it.re(r"\<span class=\"rating_nums\"\>?([\s\S]*?)\<\/span\>")[0]
+            print("Title:%s  Rating:%s" %(title, rating))
+
 
         pass
