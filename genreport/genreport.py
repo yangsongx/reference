@@ -9,6 +9,9 @@ import time
 import logging
 import pyecharts
 import smtplib
+import matplotlib.pyplot as plt
+import numpy as np
+
 import sys
 from email.mime.text import MIMEText
 #logging.basicConfig(filename='./log.txt', format='%(asctime)s : %(message)s')
@@ -17,11 +20,12 @@ class MyReport:
     m_weekday = []
     m_size = []
     m_file_size = []
+    m_quota = []
+
     m_cur = 0
     m_imgsrc = ''
 
     def __init__(self):
-        print("good")
         self.read_filesize()
         self.m_cur = int(time.time())
 
@@ -29,8 +33,9 @@ class MyReport:
         with open('./fileinfo.txt') as f:
             for line in f:
                 self.m_file_size.append(line)
+
         full_list = [] 
-        # TODO ,below should be Last-7 data..
+        # NOTE we only are interested in Last-7 days data
         for it in self.m_file_size[-7:]:
             full_list.append(it)
 
@@ -55,6 +60,14 @@ class MyReport:
             self.m_size.append('{0:.2f}'.format(size))
             for it in self.m_size:
                 print it
+
+            # further processing for M10/m4 quota, 'm4,m10,others
+            if len(section) > 2 and section[2] != None:
+                print("the quota data is %s" %(section[2]))
+                quota_list = section[2].split(',')
+                for i in quota_list:
+                    self.m_quota.append(i)
+
         return 0
 
     def send_email(self, text, title):
@@ -63,8 +76,8 @@ class MyReport:
         mail_pass = 'Adv^Tech%'
         mail_postfix = "shuzijiayuan.com"
 
-        mail_senderTo = 'chenyang@shuzijiayuan.com, yangsongxiang@shuzijiayuan.com, wangzhipeng@shuzijiayuan.com, yuanfanjie@shuzijiayuan.com'
-#        mail_senderTo = 'yangsongxiang@shuzijiayuan.com, 13614278@qq.com'
+#        mail_senderTo = 'chenyang@shuzijiayuan.com, yangsongxiang@shuzijiayuan.com, wangzhipeng@shuzijiayuan.com, yuanfanjie@shuzijiayuan.com'
+        mail_senderTo = 'yangsongxiang@shuzijiayuan.com, 13614278@qq.com'
 
         me="mserver"+"<"+mail_user+">"
         msg = MIMEText(text,_subtype='html',_charset='utf-8')
@@ -82,8 +95,92 @@ class MyReport:
             print str(e)
             return 0
 
-    # last week
     def start(self):
+        return self.start_with_matplotlib()
+
+    def start_with_matplotlib(self):
+        print("TODO code for matplotlib")
+
+
+        N = len(self.m_weekday)
+        ind = np.arange(N)    # the x locations for the groups
+
+        m10_data = []
+        m4_data = []
+        stage_data = [] # for sum of bottom
+        other_data = []
+
+        idx = 0
+        for it in self.m_weekday:
+            d = float(self.m_size[idx]) * float(self.m_quota[0])
+            m4_data.append(d)
+
+            d = float(self.m_size[idx]) * float(self.m_quota[1])
+            m10_data.append(d)
+            d = float(self.m_size[idx]) * float(self.m_quota[2])
+            other_data.append(d)
+
+            idx = idx + 1
+
+        idx = 0
+        for it in self.m_weekday:
+            d = m10_data[idx] + m4_data[idx]
+            stage_data.append(d)
+            idx = idx + 1
+
+        mylabel = ('3', '5', '2', '3', '3')
+        width = 0.55       # the width of the bars: can also be len(x) sequence
+
+        # m4
+        p1 = plt.bar(ind, m4_data, width, align='center', color = '#7f3054')
+        # m10
+        p2 = plt.bar(ind, m10_data, width, align='center',  bottom=m4_data,  color='r')
+        # other
+        p3 = plt.bar(ind, other_data, width, align='center',  bottom=stage_data,  color='#062028')
+
+        idx = 0
+        for it in self.m_weekday:
+            val = '%.0f%%' % (float(self.m_quota[0]) * 100)
+            print(val)
+            plt.text(idx, m4_data[idx]/2, val, ha='center', va='bottom')
+
+            val = '%.0f%%' % (float(self.m_quota[1]) * 100)
+            plt.text(idx, m10_data[idx]/2 + m4_data[idx], val, ha='center', va='bottom')
+
+            plt.text(idx, m10_data[idx] + m4_data[idx] + other_data[idx],
+                    self.m_size[idx], ha='center', va='bottom')
+
+            idx = idx + 1
+
+        plt.ylabel('Log Size')
+        plt.title('Last 7-days log(Unit - MB)')
+        plt.xticks(ind, self.m_weekday)
+
+        plt.legend((p1[0], p2[0], p3[0]), ('M4', 'M10', 'Unknown'))
+
+
+
+#        plt.show()
+        img = './{0}.png'.format(self.m_cur)
+        plt.savefig(img)
+        (st,output) = commands.getstatusoutput('aws s3 cp {0} s3://qbigdata/status_report/'.format(img))
+        print("Now, the image uploaded [OK]")
+        time.sleep(5)
+
+        # 2 days expiration
+        cmd = 'aws s3 presign s3://qbigdata/status_report/{0}.png --expires-in 172800'.format(self.m_cur)
+        (st,output) = commands.getstatusoutput(cmd)
+        self.m_imgsrc = output
+        print("the data:%s" %(self.m_imgsrc))
+
+        mail_body = '<img src="{0}" />'.format(self.m_imgsrc)
+        when = time.strftime("%m-%d", time.localtime(int(time.time())))
+        self.send_email(mail_body, 'Data Collector Report({0})'.format(when))
+
+        return 0
+
+    # last week
+    def start_with_pychart(self):
         bar=pyecharts.Bar("Last 7 days")
         bar.add("Unit(MB)",
                 self.m_weekday,
