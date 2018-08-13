@@ -65,8 +65,11 @@ class MyReport:
             if len(section) > 2 and section[2] != None:
                 print("the quota data is %s" %(section[2]))
                 quota_list = section[2].split(',')
+                q_d = []
                 for i in quota_list:
-                    self.m_quota.append(i)
+                    q_d.append(i)
+
+                self.m_quota.append(q_d)
 
         return 0
 
@@ -112,12 +115,12 @@ class MyReport:
 
         idx = 0
         for it in self.m_weekday:
-            d = float(self.m_size[idx]) * float(self.m_quota[0])
+            d = float(self.m_size[idx]) * float(self.m_quota[idx][0])
             m4_data.append(d)
 
-            d = float(self.m_size[idx]) * float(self.m_quota[1])
+            d = float(self.m_size[idx]) * float(self.m_quota[idx][1])
             m10_data.append(d)
-            d = float(self.m_size[idx]) * float(self.m_quota[2])
+            d = float(self.m_size[idx]) * float(self.m_quota[idx][2])
             other_data.append(d)
 
             idx = idx + 1
@@ -129,22 +132,38 @@ class MyReport:
             idx = idx + 1
 
         mylabel = ('3', '5', '2', '3', '3')
-        width = 0.55       # the width of the bars: can also be len(x) sequence
+        width = 0.45       # the width of the bars: can also be len(x) sequence
 
+
+#        cur_fig_size = plt.rcParams["figure.figsize"]
+#        print("=== cur img size info ===")
+#        print(cur_fig_size)
+
+#        cur_fig_size = [19.0, 12.0]
+#        plt.rcParams["figure.figsize"] = cur_fig_size
+
+#        print("=== again, cur img size info ===")
+#        cur_fig_size = plt.rcParams["figure.figsize"]
+#        print(cur_fig_size)
+
+
+        plt.xlim(-0.5, 12)
+
+        plt.grid(axis='y')
+#        plt.axes().set_aspect(0.7)
         # m4
-        p1 = plt.bar(ind, m4_data, width, align='center', color = '#7f3054')
+        p1 = plt.bar(ind, m4_data, width, align='center', color = '#00db54')
         # m10
-        p2 = plt.bar(ind, m10_data, width, align='center',  bottom=m4_data,  color='r')
+        p2 = plt.bar(ind, m10_data, width, align='center',  bottom=m4_data,  color='#f00078')
         # other
-        p3 = plt.bar(ind, other_data, width, align='center',  bottom=stage_data,  color='#062028')
+        p3 = plt.bar(ind, other_data, width, align='center',  bottom=stage_data,  color='#909d90')
 
         idx = 0
         for it in self.m_weekday:
-            val = '%.0f%%' % (float(self.m_quota[0]) * 100)
-            print(val)
+            val = '%.0f%%' % (float(self.m_quota[idx][0]) * 100)
             plt.text(idx, m4_data[idx]/2, val, ha='center', va='bottom')
 
-            val = '%.0f%%' % (float(self.m_quota[1]) * 100)
+            val = '%.0f%%' % (float(self.m_quota[idx][1]) * 100)
             plt.text(idx, m10_data[idx]/2 + m4_data[idx], val, ha='center', va='bottom')
 
             plt.text(idx, m10_data[idx] + m4_data[idx] + other_data[idx],
@@ -160,22 +179,24 @@ class MyReport:
 
 
 
-#        plt.show()
+        plt.show()
+#        avoid shrink size issue...
+        plt.tight_layout()
         img = './{0}.png'.format(self.m_cur)
-        plt.savefig(img)
-        (st,output) = commands.getstatusoutput('aws s3 cp {0} s3://qbigdata/status_report/'.format(img))
+#        plt.savefig(img)
+#        (st,output) = commands.getstatusoutput('aws s3 cp {0} s3://qbigdata/status_report/'.format(img))
         print("Now, the image uploaded [OK]")
         time.sleep(5)
 
         # 2 days expiration
-        cmd = 'aws s3 presign s3://qbigdata/status_report/{0}.png --expires-in 172800'.format(self.m_cur)
-        (st,output) = commands.getstatusoutput(cmd)
+#        cmd = 'aws s3 presign s3://qbigdata/status_report/{0}.png --expires-in 172800'.format(self.m_cur)
+#        (st,output) = commands.getstatusoutput(cmd)
         self.m_imgsrc = output
         print("the data:%s" %(self.m_imgsrc))
 
         mail_body = '<img src="{0}" />'.format(self.m_imgsrc)
         when = time.strftime("%m-%d", time.localtime(int(time.time())))
-        self.send_email(mail_body, 'Data Collector Report({0})'.format(when))
+#        self.send_email(mail_body, 'Data Collector Report({0})'.format(when))
 
         return 0
 
