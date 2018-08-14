@@ -79,8 +79,8 @@ class MyReport:
         mail_pass = 'Adv^Tech%'
         mail_postfix = "shuzijiayuan.com"
 
-#        mail_senderTo = 'chenyang@shuzijiayuan.com, yangsongxiang@shuzijiayuan.com, wangzhipeng@shuzijiayuan.com, yuanfanjie@shuzijiayuan.com'
-        mail_senderTo = 'yangsongxiang@shuzijiayuan.com, 13614278@qq.com'
+        mail_senderTo = 'chenyang@shuzijiayuan.com, yangsongxiang@shuzijiayuan.com, wangzhipeng@shuzijiayuan.com, yuanfanjie@shuzijiayuan.com'
+#        mail_senderTo = 'yangsongxiang@shuzijiayuan.com, 13614278@qq.com'
 
         me="mserver"+"<"+mail_user+">"
         msg = MIMEText(text,_subtype='html',_charset='utf-8')
@@ -132,25 +132,13 @@ class MyReport:
             idx = idx + 1
 
         mylabel = ('3', '5', '2', '3', '3')
-        width = 0.45       # the width of the bars: can also be len(x) sequence
+        width = 0.55       # the width of the bars: can also be len(x) sequence
 
-
-#        cur_fig_size = plt.rcParams["figure.figsize"]
-#        print("=== cur img size info ===")
-#        print(cur_fig_size)
-
-#        cur_fig_size = [19.0, 12.0]
-#        plt.rcParams["figure.figsize"] = cur_fig_size
-
-#        print("=== again, cur img size info ===")
-#        cur_fig_size = plt.rcParams["figure.figsize"]
-#        print(cur_fig_size)
-
-
-        plt.xlim(-0.5, 12)
-
+        cur_fig_size = [12.0, 6.0]
+        plt.rcParams["figure.figsize"] = cur_fig_size
+        plt.xlim(-0.5, 8.2)
         plt.grid(axis='y')
-#        plt.axes().set_aspect(0.7)
+        
         # m4
         p1 = plt.bar(ind, m4_data, width, align='center', color = '#00db54')
         # m10
@@ -161,6 +149,7 @@ class MyReport:
         idx = 0
         for it in self.m_weekday:
             val = '%.0f%%' % (float(self.m_quota[idx][0]) * 100)
+            print(val)
             plt.text(idx, m4_data[idx]/2, val, ha='center', va='bottom')
 
             val = '%.0f%%' % (float(self.m_quota[idx][1]) * 100)
@@ -179,24 +168,23 @@ class MyReport:
 
 
 
-        plt.show()
-#        avoid shrink size issue...
-        plt.tight_layout()
+#        plt.show()
         img = './{0}.png'.format(self.m_cur)
-#        plt.savefig(img)
-#        (st,output) = commands.getstatusoutput('aws s3 cp {0} s3://qbigdata/status_report/'.format(img))
+        plt.tight_layout()
+        plt.savefig(img)
+        (st,output) = commands.getstatusoutput('aws s3 cp {0} s3://qbigdata/status_report/'.format(img))
         print("Now, the image uploaded [OK]")
         time.sleep(5)
 
         # 2 days expiration
-#        cmd = 'aws s3 presign s3://qbigdata/status_report/{0}.png --expires-in 172800'.format(self.m_cur)
-#        (st,output) = commands.getstatusoutput(cmd)
+        cmd = 'aws s3 presign s3://qbigdata/status_report/{0}.png --expires-in 172800'.format(self.m_cur)
+        (st,output) = commands.getstatusoutput(cmd)
         self.m_imgsrc = output
         print("the data:%s" %(self.m_imgsrc))
 
         mail_body = '<img src="{0}" />'.format(self.m_imgsrc)
         when = time.strftime("%m-%d", time.localtime(int(time.time())))
-#        self.send_email(mail_body, 'Data Collector Report({0})'.format(when))
+        self.send_email(mail_body, 'Data Collector Report({0})'.format(when))
 
         return 0
 
