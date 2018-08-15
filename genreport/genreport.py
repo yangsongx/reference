@@ -21,6 +21,8 @@ class MyReport:
     m_size = []
     m_file_size = []
     m_quota = []
+    m_dev_count = []
+    m_voice = []
 
     m_cur = 0
     m_imgsrc = ''
@@ -68,8 +70,19 @@ class MyReport:
                 q_d = []
                 for i in quota_list:
                     q_d.append(i)
+            c_d = []
+            voice = [] #
+            if len(section) > 3:
+                num_list = section[3].split(',')
+                c_d.append(num_list[0]) # m4
+                c_d.append(num_list[1]) # m10
+
+                voice.append(num_list[4])
+                voice.append(num_list[5])
 
                 self.m_quota.append(q_d)
+                self.m_dev_count.append(c_d)
+                self.m_voice.append(voice)
 
         return 0
 
@@ -80,7 +93,7 @@ class MyReport:
         mail_postfix = "shuzijiayuan.com"
 
         mail_senderTo = 'chenyang@shuzijiayuan.com, yangsongxiang@shuzijiayuan.com, wangzhipeng@shuzijiayuan.com, yuanfanjie@shuzijiayuan.com'
-#        mail_senderTo = 'yangsongxiang@shuzijiayuan.com, 13614278@qq.com'
+        #mail_senderTo = 'yangsongxiang@shuzijiayuan.com, 13614278@qq.com'
 
         me="mserver"+"<"+mail_user+">"
         msg = MIMEText(text,_subtype='html',_charset='utf-8')
@@ -101,7 +114,136 @@ class MyReport:
     def start(self):
         return self.start_with_matplotlib()
 
+    # support sub plot
     def start_with_matplotlib(self):
+        print("sub plot matplotlib")
+
+        N = len(self.m_weekday)
+        ind = np.arange(N)    # the x locations for the groups
+
+        m10_data = []
+        m4_data = []
+        stage_data = [] # for sum of bottom
+        other_data = []
+
+        idx = 0
+        for it in self.m_weekday:
+            d = float(self.m_size[idx]) * float(self.m_quota[idx][0])
+            m4_data.append(d)
+
+            d = float(self.m_size[idx]) * float(self.m_quota[idx][1])
+            m10_data.append(d)
+            d = float(self.m_size[idx]) * float(self.m_quota[idx][2])
+            other_data.append(d)
+
+            idx = idx + 1
+
+        idx = 0
+        for it in self.m_weekday:
+            d = m10_data[idx] + m4_data[idx]
+            stage_data.append(d)
+            idx = idx + 1
+
+        mylabel = ('3', '5', '2', '3', '3')
+        width = 0.55       # the width of the bars: can also be len(x) sequence
+
+        #### PLOT #### begin
+        cur_fig_size = [12.0, 6.0]
+        plt.rcParams["figure.figsize"] = cur_fig_size
+
+        fig_1 = plt.subplot(2, 1, 1)
+        fig_1.set_xlim(-0.5, 8.5)
+        fig_1.grid(axis='y')
+        plt.xticks(ind, self.m_weekday)
+
+        fig_2 = plt.subplot(2, 1, 2)
+        fig_2.set_xlim(-0.5, 8.5)
+        fig_2.grid(axis='y')
+
+        plt.subplots_adjust(wspace=0, hspace=0.4)
+
+
+        plt.xticks(ind, self.m_weekday)
+        
+        # m4
+        p1 = fig_1.bar(ind, m10_data, width, align='center', color = '#f00078')
+        # m10
+        p2 = fig_1.bar(ind, m4_data, width, align='center',  bottom=m10_data,  color='#00db54')
+        # other
+        p3 = fig_1.bar(ind, other_data, width, align='center',  bottom=stage_data,  color='#909d90')
+
+        idx = 0
+        for it in self.m_weekday:
+            val = '%.0f%%\n%s' % (float(self.m_quota[idx][1]) * 100, self.m_dev_count[idx][1])
+            print(val)
+            fig_1.text(idx, m10_data[idx]/2, val, ha='center', va='center')
+
+            val = '%.0f%%\n%s' % (float(self.m_quota[idx][0]) * 100, self.m_dev_count[idx][0])
+            fig_1.text(idx, m4_data[idx]/2 + m10_data[idx], val, ha='center', va='center')
+
+            fig_1.text(idx, m10_data[idx] + m4_data[idx] + other_data[idx],
+                    self.m_size[idx], ha='center', va='bottom')
+
+            idx = idx + 1
+
+        fig_1.set_ylabel('Log Size')
+#        plt.ylabel('Log Size')
+        fig_1.set_title('Last 7-days log(Unit - MB)')
+#        plt.xticks(ind, self.m_weekday)
+
+        fig_1.legend((p1[0], p2[0], p3[0]), ('M10', 'M4', 'Blank'))
+
+        ## sec subplot
+        # m4
+        fig_2.set_title('Last 7-days voice recognize')
+
+        idx = 0
+        val = []
+        for it in self.m_weekday:
+            val.append(self.m_voice[idx][0])
+            idx = idx + 1
+        fig_2.plot(ind, val, color= '#00db54', linewidth=6, marker = 'o', label = 'M4')
+        idx = 0
+        for it in self.m_weekday:
+            fig_2.text(idx, self.m_voice[idx][0], self.m_voice[idx][0], ha='center', va='bottom')
+            idx = idx + 1
+
+        idx = 0
+        val = []
+        for it in self.m_weekday:
+            val.append(self.m_voice[idx][1])
+            idx = idx + 1
+        fig_2.plot(ind, val, color = '#f00078', linewidth=6, marker = 'o', label = 'M10')
+
+        idx = 0
+        for it in self.m_weekday:
+            fig_2.text(idx, self.m_voice[idx][1], self.m_voice[idx][1], ha='center', va='bottom')
+            idx = idx + 1
+
+
+
+
+#        plt.tight_layout()
+#        plt.show()
+        img = './{0}.png'.format(self.m_cur)
+        plt.savefig(img)
+        (st,output) = commands.getstatusoutput('aws s3 cp {0} s3://qbigdata/status_report/'.format(img))
+        print("Now, the image uploaded [OK]")
+        time.sleep(5)
+
+        # 2 days expiration
+        cmd = 'aws s3 presign s3://qbigdata/status_report/{0}.png --expires-in 172800'.format(self.m_cur)
+        (st,output) = commands.getstatusoutput(cmd)
+        self.m_imgsrc = output
+        print("the data:%s" %(self.m_imgsrc))
+
+        mail_body = '<img src="{0}" />'.format(self.m_imgsrc)
+        when = time.strftime("%m-%d", time.localtime(int(time.time())))
+        self.send_email(mail_body, 'Data Collector Report({0})'.format(when))
+
+        return 0
+
+    def mask_start_with_matplotlib(self):
         print("TODO code for matplotlib")
 
 
@@ -168,23 +310,23 @@ class MyReport:
 
 
 
-#        plt.show()
-        img = './{0}.png'.format(self.m_cur)
         plt.tight_layout()
-        plt.savefig(img)
-        (st,output) = commands.getstatusoutput('aws s3 cp {0} s3://qbigdata/status_report/'.format(img))
-        print("Now, the image uploaded [OK]")
-        time.sleep(5)
+        plt.show()
+#        img = './{0}.png'.format(self.m_cur)
+#        plt.savefig(img)
+#        (st,output) = commands.getstatusoutput('aws s3 cp {0} s3://qbigdata/status_report/'.format(img))
+#        print("Now, the image uploaded [OK]")
+#        time.sleep(5)
 
         # 2 days expiration
-        cmd = 'aws s3 presign s3://qbigdata/status_report/{0}.png --expires-in 172800'.format(self.m_cur)
-        (st,output) = commands.getstatusoutput(cmd)
-        self.m_imgsrc = output
-        print("the data:%s" %(self.m_imgsrc))
+#        cmd = 'aws s3 presign s3://qbigdata/status_report/{0}.png --expires-in 172800'.format(self.m_cur)
+#        (st,output) = commands.getstatusoutput(cmd)
+#        self.m_imgsrc = output
+#        print("the data:%s" %(self.m_imgsrc))
 
-        mail_body = '<img src="{0}" />'.format(self.m_imgsrc)
-        when = time.strftime("%m-%d", time.localtime(int(time.time())))
-        self.send_email(mail_body, 'Data Collector Report({0})'.format(when))
+#        mail_body = '<img src="{0}" />'.format(self.m_imgsrc)
+#        when = time.strftime("%m-%d", time.localtime(int(time.time())))
+#        self.send_email(mail_body, 'Data Collector Report({0})'.format(when))
 
         return 0
 
