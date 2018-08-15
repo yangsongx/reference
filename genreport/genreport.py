@@ -23,6 +23,7 @@ class MyReport:
     m_quota = []
     m_dev_count = []
     m_voice = []
+    m_crash = []
 
     m_cur = 0
     m_imgsrc = ''
@@ -72,10 +73,14 @@ class MyReport:
                     q_d.append(i)
             c_d = []
             voice = [] #
+            crash=[]
             if len(section) > 3:
                 num_list = section[3].split(',')
                 c_d.append(num_list[0]) # m4
                 c_d.append(num_list[1]) # m10
+
+                crash.append(num_list[2])
+                crash.append(num_list[3])
 
                 voice.append(num_list[4])
                 voice.append(num_list[5])
@@ -83,6 +88,7 @@ class MyReport:
                 self.m_quota.append(q_d)
                 self.m_dev_count.append(c_d)
                 self.m_voice.append(voice)
+                self.m_crash.append(crash)
 
         return 0
 
@@ -148,17 +154,21 @@ class MyReport:
         width = 0.55       # the width of the bars: can also be len(x) sequence
 
         #### PLOT #### begin
-        cur_fig_size = [12.0, 6.0]
+        cur_fig_size = [12.0, 10.0]
         plt.rcParams["figure.figsize"] = cur_fig_size
 
-        fig_1 = plt.subplot(2, 1, 1)
+        fig_1 = plt.subplot(3, 1, 1)
         fig_1.set_xlim(-0.5, 8.5)
         fig_1.grid(axis='y')
         plt.xticks(ind, self.m_weekday)
 
-        fig_2 = plt.subplot(2, 1, 2)
+        fig_2 = plt.subplot(3, 1, 2)
         fig_2.set_xlim(-0.5, 8.5)
         fig_2.grid(axis='y')
+
+        fig_3 = plt.subplot(3, 1, 3)
+        fig_3.set_xlim(-0.5, 8.5)
+        fig_3.grid(axis='y')
 
         plt.subplots_adjust(wspace=0, hspace=0.4)
 
@@ -220,6 +230,32 @@ class MyReport:
             fig_2.text(idx, self.m_voice[idx][1], self.m_voice[idx][1], ha='center', va='bottom')
             idx = idx + 1
 
+        ## third subplot
+        fig_3.set_title('Last 7-days crash')
+
+        idx = 0
+        val = []
+        for it in self.m_weekday:
+            val.append(self.m_crash[idx][0])
+            idx = idx + 1
+
+        fig_3.plot(ind, val, color= '#00db54', linewidth=6, marker = 'o', label = 'M4')
+        idx = 0
+        for it in self.m_weekday:
+            fig_3.text(idx, self.m_crash[idx][0], self.m_crash[idx][0], ha='center', va='bottom')
+            idx = idx + 1
+
+        idx = 0
+        val = []
+        for it in self.m_weekday:
+            val.append(self.m_crash[idx][1])
+            idx = idx + 1
+        fig_3.plot(ind, val, color = '#f00078', linewidth=6, marker = 'o', label = 'M10')
+
+        idx = 0
+        for it in self.m_weekday:
+            fig_3.text(idx, self.m_crash[idx][1], self.m_crash[idx][1], ha='center', va='bottom')
+            idx = idx + 1
 
 
 
@@ -227,19 +263,19 @@ class MyReport:
 #        plt.show()
         img = './{0}.png'.format(self.m_cur)
         plt.savefig(img)
-        (st,output) = commands.getstatusoutput('aws s3 cp {0} s3://qbigdata/status_report/'.format(img))
+#        (st,output) = commands.getstatusoutput('aws s3 cp {0} s3://qbigdata/status_report/'.format(img))
         print("Now, the image uploaded [OK]")
-        time.sleep(5)
+#        time.sleep(5)
 
         # 2 days expiration
-        cmd = 'aws s3 presign s3://qbigdata/status_report/{0}.png --expires-in 172800'.format(self.m_cur)
-        (st,output) = commands.getstatusoutput(cmd)
-        self.m_imgsrc = output
-        print("the data:%s" %(self.m_imgsrc))
+#        cmd = 'aws s3 presign s3://qbigdata/status_report/{0}.png --expires-in 172800'.format(self.m_cur)
+#        (st,output) = commands.getstatusoutput(cmd)
+#        self.m_imgsrc = output
+#        print("the data:%s" %(self.m_imgsrc))
 
-        mail_body = '<img src="{0}" />'.format(self.m_imgsrc)
-        when = time.strftime("%m-%d", time.localtime(int(time.time())))
-        self.send_email(mail_body, 'Data Collector Report({0})'.format(when))
+#        mail_body = '<img src="{0}" />'.format(self.m_imgsrc)
+#        when = time.strftime("%m-%d", time.localtime(int(time.time())))
+#        self.send_email(mail_body, 'Data Collector Report({0})'.format(when))
 
         return 0
 
