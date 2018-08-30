@@ -24,6 +24,8 @@ class MyReport:
     m_dev_count = []
     m_voice = []
     m_crash = []
+    m_unknown = []
+    m_unknown_ip = []
 
     m_cur = 0
     m_imgsrc = ''
@@ -74,6 +76,8 @@ class MyReport:
             c_d = []
             voice = [] #
             crash=[]
+            unknown = []
+            unknown_ip = []
             if len(section) > 3:
                 num_list = section[3].split(',')
                 c_d.append(num_list[0]) # m4
@@ -85,10 +89,16 @@ class MyReport:
                 voice.append(num_list[4])
                 voice.append(num_list[5])
 
+                unknown.append(num_list[6])
+                unknown_ip.append(num_list[7])
+
                 self.m_quota.append(q_d)
                 self.m_dev_count.append(c_d)
                 self.m_voice.append(voice)
                 self.m_crash.append(crash)
+
+                self.m_unknown.append(unknown)
+                self.m_unknown_ip.append(unknown_ip)
 
         return 0
 
@@ -99,7 +109,7 @@ class MyReport:
         mail_postfix = "shuzijiayuan.com"
 
         mail_senderTo = 'chenyang@shuzijiayuan.com, yangsongxiang@shuzijiayuan.com, wangzhipeng@shuzijiayuan.com, yuanfanjie@shuzijiayuan.com'
-        #mail_senderTo = 'yangsongxiang@shuzijiayuan.com, 13614278@qq.com'
+#        mail_senderTo = 'yangsongxiang@shuzijiayuan.com, 13614278@qq.com'
 
         me="mserver"+"<"+mail_user+">"
         msg = MIMEText(text,_subtype='html',_charset='utf-8')
@@ -154,22 +164,26 @@ class MyReport:
         width = 0.55       # the width of the bars: can also be len(x) sequence
 
         #### PLOT #### begin
-        cur_fig_size = [12.0, 10.0]
+        cur_fig_size = [12.0, 13.0]
         plt.rcParams["figure.figsize"] = cur_fig_size
 
-        fig_1 = plt.subplot(3, 1, 1)
+        fig_1 = plt.subplot(4, 1, 1)
         fig_1.set_xlim(-0.5, 8.5)
         fig_1.grid(axis='y')
         plt.xticks(ind, self.m_weekday)
 
-        fig_2 = plt.subplot(3, 1, 2)
+        fig_2 = plt.subplot(4, 1, 2)
         fig_2.set_xlim(-0.5, 8.5)
         fig_2.grid(axis='y')
         plt.xticks(ind, self.m_weekday)
 
-        fig_3 = plt.subplot(3, 1, 3)
+        fig_3 = plt.subplot(4, 1, 3)
         fig_3.set_xlim(-0.5, 8.5)
         fig_3.grid(axis='y')
+
+        fig_4 = plt.subplot(4, 1, 4)
+        fig_4.set_xlim(-0.5, 8.5)
+        fig_4.grid(axis='y')
 
         plt.subplots_adjust(wspace=0, hspace=0.4)
 
@@ -258,7 +272,24 @@ class MyReport:
             fig_3.text(idx, self.m_crash[idx][1], self.m_crash[idx][1], ha='center', va='bottom')
             idx = idx + 1
 
+        unknow_dev = []
+        idx = 0
+        for it in self.m_weekday:
+            print(self.m_unknown[idx])
+            print(type(self.m_unknown[idx]))
+            unknow_dev.append(int(self.m_unknown[idx][0]))
+            idx = idx + 1
 
+        fig_4.bar(ind, unknow_dev, width, align='center', color='#CC9933')
+        idx = 0
+        for it in self.m_weekday:
+            fig_4.text(idx, unknow_dev[idx], unknow_dev[idx], ha='center', va='bottom')
+            val = 'IP:%d' %(int(self.m_unknown_ip[idx][0]))
+
+            fig_4.text(idx, unknow_dev[idx]/2, val, ha='center', va='center')
+            idx = idx + 1
+
+        fig_4.set_title('Last 7-days null SN')
 
 #        plt.tight_layout()
 #        plt.show()
@@ -271,6 +302,7 @@ class MyReport:
         # 2 days expiration
         cmd = 'aws s3 presign s3://qbigdata/status_report/{0}.png --expires-in 172800'.format(self.m_cur)
         (st,output) = commands.getstatusoutput(cmd)
+
         self.m_imgsrc = output
         print("the data:%s" %(self.m_imgsrc))
 
