@@ -165,6 +165,7 @@ class MyReport:
         fig_2 = plt.subplot(3, 1, 2)
         fig_2.set_xlim(-0.5, 8.5)
         fig_2.grid(axis='y')
+        plt.xticks(ind, self.m_weekday)
 
         fig_3 = plt.subplot(3, 1, 3)
         fig_3.set_xlim(-0.5, 8.5)
@@ -263,19 +264,19 @@ class MyReport:
 #        plt.show()
         img = './{0}.png'.format(self.m_cur)
         plt.savefig(img)
-#        (st,output) = commands.getstatusoutput('aws s3 cp {0} s3://qbigdata/status_report/'.format(img))
+        (st,output) = commands.getstatusoutput('aws s3 cp {0} s3://qbigdata/status_report/'.format(img))
         print("Now, the image uploaded [OK]")
-#        time.sleep(5)
+        time.sleep(5)
 
         # 2 days expiration
-#        cmd = 'aws s3 presign s3://qbigdata/status_report/{0}.png --expires-in 172800'.format(self.m_cur)
-#        (st,output) = commands.getstatusoutput(cmd)
-#        self.m_imgsrc = output
-#        print("the data:%s" %(self.m_imgsrc))
+        cmd = 'aws s3 presign s3://qbigdata/status_report/{0}.png --expires-in 172800'.format(self.m_cur)
+        (st,output) = commands.getstatusoutput(cmd)
+        self.m_imgsrc = output
+        print("the data:%s" %(self.m_imgsrc))
 
-#        mail_body = '<img src="{0}" />'.format(self.m_imgsrc)
-#        when = time.strftime("%m-%d", time.localtime(int(time.time())))
-#        self.send_email(mail_body, 'Data Collector Report({0})'.format(when))
+        mail_body = '<img src="{0}" />'.format(self.m_imgsrc)
+        when = time.strftime("%m-%d", time.localtime(int(time.time())))
+        self.send_email(mail_body, 'Data Collector Report({0})'.format(when))
 
         return 0
 
