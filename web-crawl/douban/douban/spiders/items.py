@@ -6,4 +6,6 @@ class BookItem(scrapy.Item):
     title = scrapy.Field()
     author = scrapy.Field()
     rating = scrapy.Field()
+    cover = scrapy.Field()
+    url = scrapy.Field()
 
