@@ -14,13 +14,23 @@ from douban.spiders.items import BookItem
 class BookSpider(scrapy.Spider):
     name = "book"
     allowed_domains = ["book.douban.com"]
-    start_urls = ['http://book.douban.com/tag/编程']
+    start_urls = ['http://book.douban.com/tag/编程?start=0&type=T',
+                  'http://book.douban.com/tag/编程?start=20&type=T',
+                  'http://book.douban.com/tag/编程?start=40&type=T']
 
     # Just a internal util
     def _save_offline(self, fn, data):
         fd = open(fn, "w")
         fd.write(data)
         fd.close()
+
+    def start_requests(self):
+
+        for i in range(0, 96):
+            idx = i * 20
+            url_str = 'http://book.douban.com/tag/编程?start=%d&type=T' %(idx)
+            yield scrapy.Request(url = url_str,
+                    callback = self.parse)
 
     def parse(self, response):
         bksel = response.xpath("//li[@class='subject-item']")
@@ -39,7 +49,7 @@ class BookSpider(scrapy.Spider):
             bitem["tag"] = 0 #Programing
             bitem["title"] = title
             bitem["author"] = pubinfo 
-            bitem["rating"] = rating 
+            bitem["rating"] = float(rating)
 
             yield bitem
 
