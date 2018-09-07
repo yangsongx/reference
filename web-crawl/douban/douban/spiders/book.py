@@ -14,7 +14,8 @@ from douban.spiders.items import BookItem
 class BookSpider(scrapy.Spider):
     name = "book"
     allowed_domains = ["book.douban.com"]
-    start_urls = ['http://book.douban.com/tag/编程?start=0&type=T']
+    start_urls = ['http://book.douban.com/tag/编程?start=180&type=T',
+                  'http://book.douban.com/tag/编程?start=200&type=T']
 
 
     # Just a internal util
