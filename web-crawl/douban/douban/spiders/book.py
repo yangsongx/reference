@@ -10,6 +10,7 @@ from douban.spiders.items import BookItem
 # 0 - 编程
 # 1 - 儿童文学
 # 2 - 英语
+# 3 - 数学
 #
 #######
 class BookSpider(scrapy.Spider):
@@ -19,7 +20,7 @@ class BookSpider(scrapy.Spider):
     global_count = 0 # protection
     leading_url = 'http://book.douban.com'
 
-    start_urls = ['http://book.douban.com/tag/英语?start=0&type=T'] # only one starting...
+    start_urls = ['http://book.douban.com/tag/数学?start=0&type=T'] # only one starting...
 
 #    start_urls = ['http://book.douban.com/tag/编程?start=940&type=T',
 #                  'http://book.douban.com/tag/编程?start=960&type=T',
@@ -75,7 +76,7 @@ class BookSpider(scrapy.Spider):
 
             print("Title:%s  Rating:%s  Pub:%s" %(title, rating, pubinfo))
             bitem = BookItem()
-            bitem["tag"] = 2
+            bitem["tag"] = 3
             bitem["title"] = title
             bitem["author"] = pubinfo 
             bitem["rating"] = float(rating)
