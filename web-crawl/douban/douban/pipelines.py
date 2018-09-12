@@ -48,7 +48,7 @@ def get_existed_tests():
     ret = []
     with open('./finished_tests.data', 'r') as f:
         for line in f:
-            ret.append(line)
+            ret.append(line.strip())
     return ret
 
 def update_existed_tests(record):
@@ -64,13 +64,16 @@ class DoubanPipeline(object):
         if spider.name == 'english_test':
             print("=== [open_spider()] try get existed record for english test topic ===")
             self.existed_tests = get_existed_tests()
+            print("the existed tests data:")
+            print(self.existed_tests)
 
     def process_item(self, item, spider):
         if spider.name == 'english_test':
 
             if item['url'] in self.existed_tests:
                 print("####Attention####, duplicated item! DROP IT!")
-                return DropItem("duplicated %s url data" %(item['url']))
+                # 注意这里不是return, 是raise!
+                raise DropItem("duplicated %s url data" %(item['url']))
 
             # next try to begin formal processing!
 

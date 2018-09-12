@@ -27,22 +27,17 @@ class EnglishTestSpider(scrapy.Spider):
         print("after traverse, totally %d read materials" %(len(full_list)))
 
         print("let's handle them one-by-one")
-#        for it in full_list:
-#            print("trigger to %s" %(it['url']))
+        for it in full_list:
+            print("trigger to %s" %(it['url']))
             # 进一步处理
-#            yield scrapy.Request(url = it['url'], meta = {'mytopic': it['name']}, callback=self.parse_reader)
-#
-        print("just debug, for the first one")
-        yield scrapy.Request(url = full_list[0]['url'], meta = {'mytopic': full_list[0]['name']}, callback=self.parse_reader)
+            yield scrapy.Request(url = it['url'], meta = {'mytopic': it['name']}, callback=self.parse_reader)
+
+#        print("just debug, for the first one")
+#        yield scrapy.Request(url = full_list[0]['url'], meta = {'mytopic': full_list[0]['name']}, callback=self.parse_reader)
 
         pass
 
     def parse_reader(self, response):
-        if self.max_count > 0:
-            print("safe to quit")
-            return
-
-        self.max_count = self.max_count + 1
 
         print("coming this parse function")
         topic = response.meta['mytopic']
@@ -66,10 +61,6 @@ class EnglishTestSpider(scrapy.Spider):
 
 
     def parse_final_test(self, response):
-
-        if self.max_count > 1:
-            print("try safe quit")
-            self.max_count = self.max_count + 1
 
         topic = response.meta['topic']
         grade = response.meta['grade']
