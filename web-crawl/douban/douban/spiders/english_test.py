@@ -1,15 +1,24 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from douban.spiders.items import EnglishTestItem
+#from douban.piplines import get_existed_tests
 
-##
+def get_existed_tests_v2():
+    ret = []
+    with open('./finished_tests.data', 'r') as f:
+        for line in f:
+            ret.append(line.strip())
+    return ret
+
 class EnglishTestSpider(scrapy.Spider):
     name = "english_test"
     max_count = 0
     allowed_domains = ["www.mofangge.com"]
     start_urls = ['http://www.mofangge.com/qlist/yingyu/']
+    already_exist = []
 
     def parse(self, response):
+        self.already_exist = get_existed_tests_v2()
         bksel = response.xpath("//li[@class='lastulli']/span/a")
         full_list = []
         print("totally %d found" %(len(bksel)))
@@ -24,11 +33,11 @@ class EnglishTestSpider(scrapy.Spider):
                 }
                 full_list.append(item)
 
-        print("after traverse, totally %d read materials" %(len(full_list)))
+        print("after traverse, totally %d 阅读 materials" %(len(full_list)))
 
         print("let's handle them one-by-one")
         for it in full_list:
-            print("trigger to %s" %(it['url']))
+            print("[1st layer] trigger to %s (topic:%s)" %(it['url'], it['name']))
             # 进一步处理
             yield scrapy.Request(url = it['url'], meta = {'mytopic': it['name']}, callback=self.parse_reader)
 
@@ -39,7 +48,7 @@ class EnglishTestSpider(scrapy.Spider):
 
     def parse_reader(self, response):
 
-        print("coming this parse function")
+        print("[Layer 2]coming the parse function")
         topic = response.meta['mytopic']
         print("now, the coming response is %s, url is %s" %(topic, response.url))
 
@@ -51,16 +60,18 @@ class EnglishTestSpider(scrapy.Spider):
         for it in test_sec:
             grade = it.xpath("span[@class='right']/text()").extract()[0]
             location_url = it.xpath("a/@href").extract()[0]
-            if debug == True:
-                debug = False
+            if location_url not in self.already_exist:
                 yield scrapy.Request(url = location_url,
                     meta = {'grade': grade, 'topic': topic},
                     callback=self.parse_final_test)
+            else:
+                print("~~~ ignore this existed records")
 
         pass
 
 
     def parse_final_test(self, response):
+        print("[Layer 3]pure test exam parse function")
 
         topic = response.meta['topic']
         grade = response.meta['grade']
@@ -79,6 +90,8 @@ class EnglishTestSpider(scrapy.Spider):
         ei['answer'] = answer_sec
         ei['comments'] = comments_sec
         ei['url'] = response.url
+
+        self.already_exist.append(ei['url']) # pipline would update the static file data.
 
         yield ei
 

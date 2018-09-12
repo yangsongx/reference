@@ -26,6 +26,10 @@ def extract_english_test_contents(inputdata):
     # after below code , all <BR> HTML would be converted to \n
     txt = sel.xpath("//tbody/tr/td/div/text()").extract()
 
+    if len(txt) == 0:
+        # no div case...
+        txt = sel.xpath("//tbody/tr/td/text()").extract()
+
     for it in txt:
         contents = contents + it + '\n'
 
@@ -38,6 +42,9 @@ def extract_english_test_answer(inputdata):
 
     # after below code , all <BR> HTML would be converted to \n
     txt = sel.xpath("//tbody/tr/td/div/text()").extract()
+    if len(txt) == 0:
+        # case - 1
+        txt = sel.xpath("//tbody/tr/td/text()").extract()
 
     for it in txt:
         answer = answer + it + '\n'
