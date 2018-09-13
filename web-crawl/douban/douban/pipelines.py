@@ -31,7 +31,8 @@ def extract_english_test_contents(inputdata):
         txt = sel.xpath("//tbody/tr/td/text()").extract()
 
     for it in txt:
-        contents = contents + it + '\n'
+        # why add two newline? - because we aims to use LaTeX, which requires two-newline
+        contents = contents + it + '\n\n'
 
     return contents
 
