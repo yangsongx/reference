@@ -3,6 +3,7 @@
 from scrapy import Selector
 from scrapy.exceptions import DropItem
 import bs4
+import re
 
 # Define your item pipelines here
 #
@@ -17,6 +18,21 @@ def extract_english_test_comments(inputdata):
     outputdata = "%s,%s" %(span[1], span[2])
     outputdata = outputdata.replace("：",":") #replace UTF-8 to ASCII
     return outputdata
+
+def __latex_processing(inputdata):
+    contents = ''
+    # 注意这里的中文单引号也是有上、下之分，分别是0x2018和0x2019两个数值！
+    contents = inputdata.replace('’',"'")
+
+    # underscore handling...
+    contents = re.sub(r'_', '\\_', contents)
+
+    # $ dollars, for LaTeX
+    contents = re.sub(r'\$', '\\\\\$', contents)
+    # &, for LaTeX
+    contents = re.sub(r'&', '\\\\&', contents)
+
+    return contents
 
 def extract_english_test_contents(inputdata):
     contents = ''
@@ -34,6 +50,7 @@ def extract_english_test_contents(inputdata):
         # why add two newline? - because we aims to use LaTeX, which requires two-newline
         contents = contents + it + '\n\n'
 
+    contents = __latex_processing(contents)
     return contents
 
 def extract_english_test_answer(inputdata):
