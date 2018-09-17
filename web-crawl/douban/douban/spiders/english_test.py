@@ -67,6 +67,15 @@ class EnglishTestSpider(scrapy.Spider):
             else:
                 print("~~~ ignore this existed records")
 
+        # avoid being trapped into infinite loop...
+        if 'recursive' not in response.meta.keys():
+            print("keep seeking next pages for non-recursive...")
+            next_urls = response.xpath("//div[@class='seopage']/a[not(contains(@class, 'hot'))]/@href").extract()
+            for it in next_urls:
+                yield scrapy.Request(url = it,
+                    meta = {'recursive': 0, 'mytopic': topic},
+                    callback=self.parse_reader)
+
         pass
 
 
