@@ -28,7 +28,7 @@ def __latex_processing(inputdata):
     contents = re.sub(r'_', '\\_', contents)
 
     # $ dollars, for LaTeX
-    contents = re.sub(r'\$', '\\\\\$', contents)
+    contents = re.sub(r'\$', '\\\\$', contents)
     # &, for LaTeX
     contents = re.sub(r'&', '\\\\&', contents)
 
