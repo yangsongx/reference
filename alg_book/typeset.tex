@@ -1,0 +1,43 @@
+\documentclass[10pt,adobefonts,fancyhdr,hyperref,UTF8]{ctexbook}
+
+\makeatletter
+\input{format.cls}
+\makeatother
+
+\begin{document}
+\sloppy
+\newcommand\mybooktitle{《Linux多线程服务端编程：使用muduo C++网络库》}
+\newcommand\BookTitle{用 \LaTeX 排版编程技术书籍的一些个人经验}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[RE]{\normalfont\small\rmfamily\nouppercase{\leftmark}}
+\fancyhead[LO]{\normalfont\small\rmfamily\nouppercase{\rightmark}}
+\fancyhead[LE,RO]{\thepage}
+\fancyfoot[LE,LO]{\small\normalfont\youyuan\BookTitle  by 陈硕}
+\fancyfoot[RE,RO]{\textsf{\small \color{blue} http://www.chenshuo.com/}}
+
+\makeatletter
+\@openrightfalse
+\makeatother
+
+\frontmatter % 开始前言目录，页码用罗马数字
+
+\include{title}
+
+\tableofcontents
+
+\mainmatter % 开始正文，页码用阿拉伯数字
+
+\graphicspath{{diagrams/}}
+
+\include{chapEnvironment}
+\include{chapLayout}
+\include{chapStyle}
+% \include{chapExperience}
+\include{chapTools}
+\include{chapDiagram}
+
+\appendix % 开始附录，章用字母编号
+\printindex
+
+\end{document}
