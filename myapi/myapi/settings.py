@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 
+import ldap
+from django_auth_ldap.config import LDAPSearch,GroupOfNamesType, PosixGroupType
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -80,7 +83,50 @@ DATABASES = {
     }
 }
 
+# newly-added line, for both LDAP and default model auth
 
+AUTH_LDAP_SERVER_URI = "ldap://xxxxx"
+
+AUTH_LDAP_BIND_DN = "cn=admin,dc=yinfan,dc=com"
+AUTH_LDAP_BIND_PASSWORD = "xxxxx"
+
+AUTH_LDAP_USER_SEARCH = LDAPSearch(
+    "ou=iot,dc=yinfan,dc=com",
+    ldap.SCOPE_SUBTREE,
+    "(uid=%(user)s)"
+)
+
+# AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
+#     "cn=admin,dc=yinfan,dc=com",
+#     ldap.SCOPE_SUBTREE,
+#     "(objectClass=posixGroup)",
+# )
+# AUTH_LDAP_GROUP_TYPE = PosixGroupType (name_attr="cn")
+# # AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
+# AUTH_LDAP_REQUIRE_GROUP = "cn=swdev,ou=iot,dc=yinfan,dc=com"
+
+# # AUTH_LDAP_USER_DN_TEMPLATE = "uid=%(user)s,ou=iot,dc=yinfan,dc=com"
+AUTH_LDAP_USER_ATTR_MAP = {
+    "username":"uid",
+    "first_name": "givenName",
+    "last_name": "sn",
+    "email": "mail",
+}
+
+
+# AUTH_LDAP_USER_FLAGS_BY_GROUP = {
+#     "is_active": "ou=iot,dc=yinfan,dc=com",
+    # "is_staff": "ou=iot,dc=yinfan,dc=com",
+#     "is_superuser": "ou=iot,dc=yinfan,dc=com",
+# }
+
+AUTH_LDAP_ALWAYS_UPDATE_USER = True
+# AUTH_LDAP_FIND_GROUP_PERMS = True
+
+AUTHENTICATION_BACKENDS = [
+    "django_auth_ldap.backend.LDAPBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
