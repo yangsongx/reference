@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'oauth2_provider',
+    'rest_framework',
+    'rest_framework_swagger'
 ]
 
 MIDDLEWARE = [
@@ -72,7 +75,29 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'myapi.wsgi.application'
 
+OAUTH2_PROVIDER = {
+    # this is the list of available scopes
+    'SCOPES': {'read': 'Read scope', 'write': 'Write scope', 'groups': 'Access to your groups'}
+}
 
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        # 'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    )
+}
+SWAGGER_SETTINGS = {
+    'DOC_EXPANSION': 'list',
+    'USE_SESSION_AUTH' : True,
+    'LOGIN_URL' : 'rest_framework:login',
+    'LOGOUT_URL' : 'rest_framework:logout',
+    'SHOW_REQUEST_HEADERS' : True
+}
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
@@ -85,10 +110,10 @@ DATABASES = {
 
 # newly-added line, for both LDAP and default model auth
 
-AUTH_LDAP_SERVER_URI = "ldap://xxxxx"
+AUTH_LDAP_SERVER_URI = "ldap://xxx"
 
 AUTH_LDAP_BIND_DN = "cn=admin,dc=yinfan,dc=com"
-AUTH_LDAP_BIND_PASSWORD = "xxxxx"
+AUTH_LDAP_BIND_PASSWORD = "xxxx"
 
 AUTH_LDAP_USER_SEARCH = LDAPSearch(
     "ou=iot,dc=yinfan,dc=com",
@@ -97,11 +122,11 @@ AUTH_LDAP_USER_SEARCH = LDAPSearch(
 )
 
 # AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
-#     "cn=admin,dc=yinfan,dc=com",
+#     "ou=iot,dc=yinfan,dc=com",
 #     ldap.SCOPE_SUBTREE,
-#     "(objectClass=posixGroup)",
+#     "(objectClass=groupOfNames)",
 # )
-# AUTH_LDAP_GROUP_TYPE = PosixGroupType (name_attr="cn")
+# AUTH_LDAP_GROUP_TYPE = GroupOfNamesType (name_attr="cn")
 # # AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
 # AUTH_LDAP_REQUIRE_GROUP = "cn=swdev,ou=iot,dc=yinfan,dc=com"
 
@@ -115,9 +140,9 @@ AUTH_LDAP_USER_ATTR_MAP = {
 
 
 # AUTH_LDAP_USER_FLAGS_BY_GROUP = {
-#     "is_active": "ou=iot,dc=yinfan,dc=com",
-    # "is_staff": "ou=iot,dc=yinfan,dc=com",
-#     "is_superuser": "ou=iot,dc=yinfan,dc=com",
+# #     "is_active": "ou=iot,dc=yinfan,dc=com",
+#     "is_staff": True,
+#     # "is_superuser": "ou=iot,dc=yinfan,dc=com",
 # }
 
 AUTH_LDAP_ALWAYS_UPDATE_USER = True
